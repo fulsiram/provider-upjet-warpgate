@@ -226,9 +226,17 @@ crddiff: $(UPTEST)
 
 schema-version-diff:
 	@$(INFO) Checking for native state schema version changes
-	@export PREV_PROVIDER_VERSION=$$(git cat-file -p "${GITHUB_BASE_REF}:Makefile" | sed -nr 's/^export[[:space:]]*TERRAFORM_PROVIDER_VERSION[[:space:]]*:=[[:space:]]*(.+)/\1/p'); \
-	echo Detected previous Terraform provider version: $${PREV_PROVIDER_VERSION}; \
+	@export PREV_PROVIDER_VERSION=$$(git cat-file -p "${GITHUB_BASE_REF}:Makefile" 2>/dev/null | sed -nr 's/^export[[:space:]]*TERRAFORM_PROVIDER_VERSION[[:space:]]*[:?]=[[:space:]]*(.+)/\1/p'); \
+	echo Detected previous Terraform provider version: $${PREV_PROVIDER_VERSION:-<none>}; \
 	echo Current Terraform provider version: $${TERRAFORM_PROVIDER_VERSION}; \
+	if [ -z "$${PREV_PROVIDER_VERSION}" ] || [ "$${PREV_PROVIDER_VERSION}" = "$${TERRAFORM_PROVIDER_VERSION}" ]; then \
+		echo "Nothing to diff; skipping."; \
+		exit 0; \
+	fi; \
+	if [ ! -f config/generated.lst ]; then \
+		echo "config/generated.lst not found; skipping."; \
+		exit 0; \
+	fi; \
 	mkdir -p $(WORK_DIR); \
 	git cat-file -p "$${GITHUB_BASE_REF}:config/schema.json" > "$(WORK_DIR)/schema.json.$${PREV_PROVIDER_VERSION}"; \
 	./scripts/version_diff.py config/generated.lst "$(WORK_DIR)/schema.json.$${PREV_PROVIDER_VERSION}" config/schema.json
