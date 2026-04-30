@@ -1,0 +1,53 @@
+apiVersion: target.warpgate.m.salami.network/v1alpha1
+kind: TargetRole
+metadata:
+  annotations:
+    meta.upbound.io/example-id: target/v1alpha1/targetrole
+  labels:
+    testing.upbound.io/example-name: developers_web_access
+  name: developers-web-access
+  namespace: crossplane-system
+spec:
+  forProvider:
+    roleIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: developers
+    targetIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: web_server
+
+---
+
+apiVersion: role.warpgate.m.salami.network/v1alpha1
+kind: Role
+metadata:
+  annotations:
+    meta.upbound.io/example-id: target/v1alpha1/targetrole
+  labels:
+    testing.upbound.io/example-name: developers
+  name: developers
+  namespace: crossplane-system
+spec:
+  forProvider:
+    name: developers
+
+---
+
+apiVersion: target.warpgate.m.salami.network/v1alpha1
+kind: Target
+metadata:
+  annotations:
+    meta.upbound.io/example-id: target/v1alpha1/targetrole
+  labels:
+    testing.upbound.io/example-name: web_server
+  name: web-server
+  namespace: crossplane-system
+spec:
+  forProvider:
+    name: web-server
+    sshOptions:
+    - host: 10.0.0.1
+      port: 22
+      publicKeyAuth:
+      - {}
+      username: admin

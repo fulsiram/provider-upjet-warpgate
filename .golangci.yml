@@ -105,6 +105,9 @@ linters:
       - linters:
           - gosec
         text: 'G104:'
+      - linters:
+          - goconst
+        path: ^config/(cluster|namespaced)/
     paths:
       - zz_\..+\.go$
       - third_party$
@@ -123,7 +126,7 @@ formatters:
       simplify: true
     goimports:
       local-prefixes:
-        - github.com/crossplane/upjet-provider-template
+        - github.com/fulsiram/provider-upjet-warpgate
   exclusions:
     generated: lax
     paths:

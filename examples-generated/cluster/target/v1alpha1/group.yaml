@@ -1,0 +1,13 @@
+apiVersion: target.warpgate.salami.network/v1alpha1
+kind: Group
+metadata:
+  annotations:
+    meta.upbound.io/example-id: target/v1alpha1/group
+  labels:
+    testing.upbound.io/example-name: production
+  name: production
+spec:
+  forProvider:
+    color: Danger
+    description: Production environment servers
+    name: production

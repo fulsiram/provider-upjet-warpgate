@@ -1,40 +1,1049 @@
-name: hashicorp/null
+name: warp-tech/warpgate
 resources:
-    null_resource:
+    warpgate_parameters:
         subCategory: ""
-        description: The null_resource resource implements the standard resource lifecycle but takes no further action. On Terraform 1.4 and later, use the terraform_data resource type https://developer.hashicorp.com/terraform/language/resources/terraform-data instead. Terraform 1.9 and later support the moved configuration block from null_resource to terraform_data. The triggers argument allows specifying an arbitrary set of values that, when changed, will cause the resource to be replaced.
-        name: null_resource
-        title: null_resource Resource - terraform-provider-null
+        description: Manages global parameters in Warpgate. These settings control behavior across the entire Warpgate instance.
+        name: warpgate_parameters
+        title: warpgate_parameters Resource - terraform-provider-warpgate
         examples:
-            - name: cluster
+            - name: global_settings
               manifest: |-
                 {
-                  "connection": [
-                    {
-                      "host": "${element(aws_instance.cluster[*].public_ip, 0)}"
-                    }
-                  ],
-                  "provisioner": {
-                    "remote-exec": [
-                      {
-                        "inline": [
-                          "bootstrap-cluster.sh ${join(\" \",\n      aws_instance.cluster[*].private_ip)}"
-                        ]
-                      }
-                    ]
-                  },
-                  "triggers": {
-                    "cluster_instance_ids": "${join(\",\", aws_instance.cluster[*].id)}"
-                  }
+                  "allow_own_credential_management": true,
+                  "minimize_password_login": false,
+                  "rate_limit_bytes_per_second": 1000000,
+                  "show_session_menu": true,
+                  "ssh_client_auth_keyboard_interactive": false,
+                  "ssh_client_auth_password": true,
+                  "ssh_client_auth_publickey": true
                 }
+        argumentDocs:
+            allow_own_credential_management: '- (Required) Allow users to manage their own credentials.'
+            id: '- The ID of this resource (always set to "parameters").'
+            minimize_password_login: '- (Optional) Minimize the use of password-based login methods.'
+            rate_limit_bytes_per_second: '- (Optional) Rate limit for data transfer in bytes per second.'
+            show_session_menu: '- (Optional, default: true) When enabled, Warpgate injects a session menu into HTTP sessions, allowing users to log out or return to the home page.'
+            ssh_client_auth_keyboard_interactive: '- (Optional) Enable SSH keyboard interactive authentication for clients.'
+            ssh_client_auth_password: '- (Optional) Enable SSH password authentication for clients.'
+            ssh_client_auth_publickey: '- (Optional) Enable SSH public key authentication for clients.'
+        importStatements: []
+    warpgate_password_credential:
+        subCategory: ""
+        description: Manages a password credential for a user in Warpgate.
+        name: warpgate_password_credential
+        title: warpgate_password_credential Resource - terraform-provider-warpgate
+        examples:
+            - name: eugene_password
+              manifest: |-
+                {
+                  "password": "securepassword123",
+                  "user_id": "${warpgate_user.eugene.id}"
+                }
+              references:
+                user_id: warpgate_user.eugene.id
               dependencies:
-                aws_instance.cluster: |-
+                warpgate_user.eugene: |-
                     {
-                      "ami": "ami-0dcc1e21636832c5d",
-                      "count": 3,
-                      "instance_type": "m5.large"
+                      "credential_policy": [
+                        {
+                          "http": [
+                            "Password"
+                          ],
+                          "ssh": [
+                            "Password",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "username": "eugene"
                     }
         argumentDocs:
-            id: (String) This is set to a random value at create time.
-            triggers: (Map of String) A map of arbitrary strings that, when changed, will force the null resource to be replaced, re-running any associated provisioners.
+            id: '- The combined ID in the format user_id:credential_id.'
+            password: '- (Required) The password to use for authentication. This is a sensitive value and will be stored only in state. This cannot be changed after creation, requiring recreation of the resource to update the password.'
+            user_id: '- (Required) The ID of the user to add the password credential to. This cannot be changed after creation.'
+        importStatements: []
+    warpgate_public_key_credential:
+        subCategory: ""
+        description: Manages a public key credential for a user in Warpgate.
+        name: warpgate_public_key_credential
+        title: warpgate_public_key_credential Resource - terraform-provider-warpgate
+        examples:
+            - name: devops_key
+              manifest: |-
+                {
+                  "label": "Work Laptop",
+                  "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 email@example.com",
+                  "user_id": "${warpgate_user.devops.id}"
+                }
+              references:
+                user_id: warpgate_user.devops.id
+              dependencies:
+                warpgate_user.devops: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "ssh": [
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "username": "devops"
+                    }
+        argumentDocs:
+            date_added: '- The date and time when the public key was added to the user''s account.'
+            id: '- The combined ID in the format user_id:credential_id.'
+            label: '- (Required) A descriptive label for the public key, helping to identify the key''s purpose or origin.'
+            last_used: '- The date and time when the public key was last used for authentication, if available.'
+            public_key: '- (Required) The OpenSSH format public key. This should be the public portion of an SSH keypair.'
+            user_id: '- (Required) The ID of the user to add the public key credential to. This cannot be changed after creation.'
+        importStatements: []
+    warpgate_role:
+        subCategory: ""
+        description: Manages a role in Warpgate. Roles define permissions that can be assigned to users and targets.
+        name: warpgate_role
+        title: warpgate_role Resource - terraform-provider-warpgate
+        examples:
+            - name: developers
+              manifest: |-
+                {
+                  "description": "Role for development team members",
+                  "name": "developers"
+                }
+            - name: admins
+              manifest: |-
+                {
+                  "description": "Role for system administrators with full access",
+                  "name": "administrators"
+                }
+        argumentDocs:
+            description: '- (Optional) A human-readable description of the role and its purpose.'
+            id: '- The ID of the role.'
+            name: '- (Required) The name of the role. Must be unique within the Warpgate instance.'
+        importStatements: []
+    warpgate_target:
+        subCategory: ""
+        description: Manages a target in Warpgate. A target represents a destination system that users can connect to.
+        name: warpgate_target
+        title: warpgate_target Resource - terraform-provider-warpgate
+        examples:
+            - name: web_server
+              manifest: |-
+                {
+                  "description": "Production web server",
+                  "name": "web-server",
+                  "ssh_options": [
+                    {
+                      "host": "10.0.0.1",
+                      "password_auth": [
+                        {
+                          "password": "supersecret"
+                        }
+                      ],
+                      "port": 22,
+                      "username": "admin"
+                    }
+                  ]
+                }
+            - name: api_server
+              manifest: |-
+                {
+                  "description": "Internal API server",
+                  "http_options": [
+                    {
+                      "external_host": "api.external.example.com",
+                      "headers": {
+                        "X-API-Version": "v1",
+                        "X-Custom-Header": "custom-value"
+                      },
+                      "tls": [
+                        {
+                          "mode": "Required",
+                          "verify": true
+                        }
+                      ],
+                      "url": "https://api.internal.example.com"
+                    }
+                  ],
+                  "name": "api-server"
+                }
+            - name: mysql_db
+              manifest: |-
+                {
+                  "description": "Production MySQL database",
+                  "mysql_options": [
+                    {
+                      "host": "db.example.com",
+                      "password": "dbpassword",
+                      "port": 3306,
+                      "tls": [
+                        {
+                          "mode": "Required",
+                          "verify": true
+                        }
+                      ],
+                      "username": "app_user"
+                    }
+                  ],
+                  "name": "mysql-db"
+                }
+            - name: postgres_db
+              manifest: |-
+                {
+                  "description": "Analytics PostgreSQL database",
+                  "name": "postgres-db",
+                  "postgres_options": [
+                    {
+                      "host": "analytics-db.example.com",
+                      "password": "dbpassword",
+                      "port": 5432,
+                      "tls": [
+                        {
+                          "mode": "Required",
+                          "verify": true
+                        }
+                      ],
+                      "username": "analyst"
+                    }
+                  ]
+                }
+            - name: k8s_cluster
+              manifest: |-
+                {
+                  "description": "Production Kubernetes cluster",
+                  "kubernetes_options": [
+                    {
+                      "cluster_url": "https://k8s.example.com:6443",
+                      "tls": [
+                        {
+                          "mode": "Required",
+                          "verify": true
+                        }
+                      ],
+                      "token_auth": [
+                        {
+                          "token": "eyJhbGciOiJSUzI1NiIs..."
+                        }
+                      ]
+                    }
+                  ],
+                  "name": "k8s-cluster"
+                }
+            - name: k8s_cluster_cert
+              manifest: |-
+                {
+                  "description": "Kubernetes cluster with certificate auth",
+                  "kubernetes_options": [
+                    {
+                      "certificate_auth": [
+                        {
+                          "certificate": "${file(\"client.crt\")}",
+                          "private_key": "${file(\"client.key\")}"
+                        }
+                      ],
+                      "cluster_url": "https://k8s.example.com:6443",
+                      "tls": [
+                        {
+                          "mode": "Required",
+                          "verify": true
+                        }
+                      ]
+                    }
+                  ],
+                  "name": "k8s-cluster-cert"
+                }
+        argumentDocs:
+            allow_insecure_algos: (Boolean) Allow insecure SSH algorithms
+            allow_roles: '- The list of roles allowed to access this target (computed from role assignments).'
+            certificate: (String) The client certificate PEM
+            certificate_auth: '(Block List, Max: 1) Certificate authentication for Kubernetes (see below for nested schema)'
+            cluster_url: (String) The Kubernetes cluster URL
+            description: '- (Optional) A human-readable description of the target.'
+            external_host: (String) External host for HTTP requests
+            group_id: '- (Optional) The ID of the target group this target is assigned to.'
+            headers: (Map of String) HTTP headers to include in requests
+            host: (String) The MySQL server hostname or IP address
+            http_options: '- (Optional) HTTP target configuration block.'
+            http_options.external_host: '- (Optional) External host for HTTP requests.'
+            http_options.headers: '- (Optional) HTTP headers to include in requests.'
+            http_options.tls: '- (Required) TLS configuration block.'
+            http_options.url: '- (Required) The HTTP server URL.'
+            id: '- The ID of the target.'
+            kubernetes_options: '(Block List, Max: 1) Kubernetes target options (see below for nested schema)'
+            mode: '- (Required) TLS mode. Valid values: Disabled, Preferred, Required.'
+            mysql_options: '- (Optional) MySQL target configuration block.'
+            mysql_options.host: '- (Required) The MySQL server hostname or IP address.'
+            mysql_options.password: '- (Optional) The MySQL password.'
+            mysql_options.port: '- (Required) The MySQL server port.'
+            mysql_options.tls: '- (Required) TLS configuration block.'
+            mysql_options.username: '- (Required) The MySQL username.'
+            name: '- (Required) The name of the target. Must be unique within the Warpgate instance.'
+            password: '- (Required) The password for SSH authentication.'
+            password_auth: '(Block List, Max: 1) Password authentication for SSH (see below for nested schema)'
+            port: (Number) The MySQL server port
+            postgres_options: '- (Optional) PostgreSQL target configuration block.'
+            postgres_options.host: '- (Required) The PostgreSQL server hostname or IP address.'
+            postgres_options.password: '- (Optional) The PostgreSQL password.'
+            postgres_options.port: '- (Required) The PostgreSQL server port.'
+            postgres_options.tls: '- (Required) TLS configuration block.'
+            postgres_options.username: '- (Required) The PostgreSQL username.'
+            private_key: (String, Sensitive) The client private key PEM
+            public_key_auth: '(Block List, Max: 1) Public key authentication for SSH (see below for nested schema)'
+            ssh_options: '- (Optional) SSH target configuration block.'
+            ssh_options.allow_insecure_algos: '- (Optional) Allow insecure SSH algorithms. Default: false.'
+            ssh_options.host: '- (Required) The SSH server hostname or IP address.'
+            ssh_options.password_auth: '- (Optional) Password authentication for SSH. Conflicts with public_key_auth.'
+            ssh_options.port: '- (Required) The SSH server port.'
+            ssh_options.public_key_auth: '- (Optional) Public key authentication for SSH. Conflicts with password_auth. No additional properties needed.'
+            ssh_options.username: '- (Required) The SSH username.'
+            tls: '(Block List, Min: 1, Max: 1) TLS configuration (see below for nested schema)'
+            token: (String, Sensitive) The bearer token for Kubernetes authentication
+            token_auth: '(Block List, Max: 1) Token authentication for Kubernetes (see below for nested schema)'
+            url: (String) The HTTP server URL
+            username: (String) The MySQL username
+            verify: '- (Required) Verify TLS certificates.'
+        importStatements: []
+    warpgate_target_group:
+        subCategory: ""
+        description: Manages a target group in Warpgate. Target groups help organize targets visually and logically.
+        name: warpgate_target_group
+        title: warpgate_target_group Resource - terraform-provider-warpgate
+        examples:
+            - name: production
+              manifest: |-
+                {
+                  "color": "Danger",
+                  "description": "Production environment servers",
+                  "name": "production"
+                }
+            - name: development
+              manifest: |-
+                {
+                  "color": "Info",
+                  "description": "Development environment servers",
+                  "name": "development"
+                }
+            - name: databases
+              manifest: |-
+                {
+                  "color": "Warning",
+                  "description": "Database servers across all environments",
+                  "name": "databases"
+                }
+        argumentDocs:
+            color: '- (Optional) The color that the target group should have for visual identification. Valid values: Primary, Secondary, Success, Danger, Warning, Info, Light, Dark.'
+            description: '- (Optional) A human-readable description of the target group.'
+            id: '- The ID of the target group.'
+            name: '- (Required) The name of the target group. Must be unique within the Warpgate instance.'
+        importStatements: []
+    warpgate_target_role:
+        subCategory: ""
+        description: Creates an association between a target and a role in Warpgate.
+        name: warpgate_target_role
+        title: warpgate_target_role Resource - terraform-provider-warpgate
+        examples:
+            - name: developers_web_access
+              manifest: |-
+                {
+                  "role_id": "${warpgate_role.developers.id}",
+                  "target_id": "${warpgate_target.web_server.id}"
+                }
+              references:
+                role_id: warpgate_role.developers.id
+                target_id: warpgate_target.web_server.id
+              dependencies:
+                warpgate_role.developers: |-
+                    {
+                      "name": "developers"
+                    }
+                warpgate_target.web_server: |-
+                    {
+                      "name": "web-server",
+                      "ssh_options": [
+                        {
+                          "host": "10.0.0.1",
+                          "port": 22,
+                          "public_key_auth": [
+                            {}
+                          ],
+                          "username": "admin"
+                        }
+                      ]
+                    }
+            - name: developers_web_access
+              manifest: |-
+                {
+                  "role_id": "${warpgate_role.developers.id}",
+                  "target_id": "${warpgate_target.web_server.id}"
+                }
+              references:
+                role_id: warpgate_role.developers.id
+                target_id: warpgate_target.web_server.id
+              dependencies:
+                warpgate_role.administrators: |-
+                    {
+                      "description": "System administrators",
+                      "name": "administrators"
+                    }
+                warpgate_role.developers: |-
+                    {
+                      "description": "Development team members",
+                      "name": "developers"
+                    }
+                warpgate_target.db_server: |-
+                    {
+                      "description": "Database server",
+                      "name": "db-server",
+                      "ssh_options": [
+                        {
+                          "host": "10.0.0.2",
+                          "port": 22,
+                          "public_key_auth": [
+                            {}
+                          ],
+                          "username": "dbadmin"
+                        }
+                      ]
+                    }
+                warpgate_target.web_server: |-
+                    {
+                      "description": "Web server",
+                      "name": "web-server",
+                      "ssh_options": [
+                        {
+                          "host": "10.0.0.1",
+                          "port": 22,
+                          "public_key_auth": [
+                            {}
+                          ],
+                          "username": "webadmin"
+                        }
+                      ]
+                    }
+                warpgate_user.eugene: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "ssh": [
+                            "Password",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "Developer",
+                      "username": "eugene"
+                    }
+                warpgate_user.jane: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "ssh": [
+                            "Password",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "Administrator",
+                      "username": "jane.smith"
+                    }
+                warpgate_user_role.eugene_developer: |-
+                    {
+                      "role_id": "${warpgate_role.developers.id}",
+                      "user_id": "${warpgate_user.eugene.id}"
+                    }
+                warpgate_user_role.jane_administrator: |-
+                    {
+                      "role_id": "${warpgate_role.administrators.id}",
+                      "user_id": "${warpgate_user.jane.id}"
+                    }
+            - name: admins_web_access
+              manifest: |-
+                {
+                  "role_id": "${warpgate_role.administrators.id}",
+                  "target_id": "${warpgate_target.web_server.id}"
+                }
+              references:
+                role_id: warpgate_role.administrators.id
+                target_id: warpgate_target.web_server.id
+              dependencies:
+                warpgate_role.administrators: |-
+                    {
+                      "description": "System administrators",
+                      "name": "administrators"
+                    }
+                warpgate_role.developers: |-
+                    {
+                      "description": "Development team members",
+                      "name": "developers"
+                    }
+                warpgate_target.db_server: |-
+                    {
+                      "description": "Database server",
+                      "name": "db-server",
+                      "ssh_options": [
+                        {
+                          "host": "10.0.0.2",
+                          "port": 22,
+                          "public_key_auth": [
+                            {}
+                          ],
+                          "username": "dbadmin"
+                        }
+                      ]
+                    }
+                warpgate_target.web_server: |-
+                    {
+                      "description": "Web server",
+                      "name": "web-server",
+                      "ssh_options": [
+                        {
+                          "host": "10.0.0.1",
+                          "port": 22,
+                          "public_key_auth": [
+                            {}
+                          ],
+                          "username": "webadmin"
+                        }
+                      ]
+                    }
+                warpgate_user.eugene: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "ssh": [
+                            "Password",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "Developer",
+                      "username": "eugene"
+                    }
+                warpgate_user.jane: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "ssh": [
+                            "Password",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "Administrator",
+                      "username": "jane.smith"
+                    }
+                warpgate_user_role.eugene_developer: |-
+                    {
+                      "role_id": "${warpgate_role.developers.id}",
+                      "user_id": "${warpgate_user.eugene.id}"
+                    }
+                warpgate_user_role.jane_administrator: |-
+                    {
+                      "role_id": "${warpgate_role.administrators.id}",
+                      "user_id": "${warpgate_user.jane.id}"
+                    }
+            - name: admins_db_access
+              manifest: |-
+                {
+                  "role_id": "${warpgate_role.administrators.id}",
+                  "target_id": "${warpgate_target.db_server.id}"
+                }
+              references:
+                role_id: warpgate_role.administrators.id
+                target_id: warpgate_target.db_server.id
+              dependencies:
+                warpgate_role.administrators: |-
+                    {
+                      "description": "System administrators",
+                      "name": "administrators"
+                    }
+                warpgate_role.developers: |-
+                    {
+                      "description": "Development team members",
+                      "name": "developers"
+                    }
+                warpgate_target.db_server: |-
+                    {
+                      "description": "Database server",
+                      "name": "db-server",
+                      "ssh_options": [
+                        {
+                          "host": "10.0.0.2",
+                          "port": 22,
+                          "public_key_auth": [
+                            {}
+                          ],
+                          "username": "dbadmin"
+                        }
+                      ]
+                    }
+                warpgate_target.web_server: |-
+                    {
+                      "description": "Web server",
+                      "name": "web-server",
+                      "ssh_options": [
+                        {
+                          "host": "10.0.0.1",
+                          "port": 22,
+                          "public_key_auth": [
+                            {}
+                          ],
+                          "username": "webadmin"
+                        }
+                      ]
+                    }
+                warpgate_user.eugene: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "ssh": [
+                            "Password",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "Developer",
+                      "username": "eugene"
+                    }
+                warpgate_user.jane: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "ssh": [
+                            "Password",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "Administrator",
+                      "username": "jane.smith"
+                    }
+                warpgate_user_role.eugene_developer: |-
+                    {
+                      "role_id": "${warpgate_role.developers.id}",
+                      "user_id": "${warpgate_user.eugene.id}"
+                    }
+                warpgate_user_role.jane_administrator: |-
+                    {
+                      "role_id": "${warpgate_role.administrators.id}",
+                      "user_id": "${warpgate_user.jane.id}"
+                    }
+        argumentDocs:
+            id: '- The combined ID in the format target_id:role_id.'
+            role_id: '- (Required) The ID of the role to assign.'
+            target_id: '- (Required) The ID of the target to assign the role to.'
+        importStatements: []
+    warpgate_ticket:
+        subCategory: ""
+        description: Manages a ticket in Warpgate. Tickets provide pre-authenticated access to a target for a specific user.
+        name: warpgate_ticket
+        title: warpgate_ticket Resource - terraform-provider-warpgate
+        examples:
+            - name: ticket
+              manifest: |-
+                {
+                  "target_name": "web-server",
+                  "username": "admin"
+                }
+              dependencies:
+                warpgate_target.web_server: |-
+                    {
+                      "description": "Web server target",
+                      "http_options": [
+                        {
+                          "external_host": "web.example.com",
+                          "tls": [
+                            {
+                              "mode": "Required",
+                              "verify": true
+                            }
+                          ],
+                          "url": "https://web.example.com"
+                        }
+                      ],
+                      "name": "web-server"
+                    }
+        argumentDocs:
+            description: (String) The description of the ticket.
+            expiry: (String) The expiry time of the ticket.
+            id: (String) The ID of this resource.
+            number_of_uses: (Number) The number of uses allowed for the ticket before it becomes invalid.
+            secret: (String, Sensitive) The secret value of the ticket used for authentication.
+            target_name: (String) The name of the target the ticket grants access to.
+            username: (String) The user associated with the ticket. Will determine the permissions and access rights.
+        importStatements: []
+    warpgate_user:
+        subCategory: ""
+        description: Manages a user in Warpgate.
+        name: warpgate_user
+        title: warpgate_user Resource - terraform-provider-warpgate
+        examples:
+            - name: eugene
+              manifest: |-
+                {
+                  "credential_policy": [
+                    {
+                      "http": [
+                        "Password",
+                        "Totp"
+                      ],
+                      "mysql": [
+                        "Password"
+                      ],
+                      "postgres": [
+                        "Password"
+                      ],
+                      "ssh": [
+                        "Password",
+                        "PublicKey"
+                      ]
+                    }
+                  ],
+                  "description": "Eugene - Development Lead",
+                  "username": "eugene"
+                }
+              dependencies:
+                warpgate_user_sso_credential.github_sso: |-
+                    {
+                      "email": "john.doe@company.com",
+                      "sso_provider": "github",
+                      "user_id": "${warpgate_user.sso_user.id}"
+                    }
+                warpgate_user_sso_credential.google_sso: |-
+                    {
+                      "email": "john.doe@company.com",
+                      "sso_provider": "google",
+                      "user_id": "${warpgate_user.sso_user.id}"
+                    }
+            - name: deploy_bot
+              manifest: |-
+                {
+                  "allowed_ip_ranges": [
+                    "10.0.0.0/8",
+                    "192.168.1.0/24"
+                  ],
+                  "credential_policy": [
+                    {
+                      "ssh": [
+                        "PublicKey"
+                      ]
+                    }
+                  ],
+                  "description": "Deployment automation service account",
+                  "username": "deploy_bot"
+                }
+              dependencies:
+                warpgate_user_sso_credential.github_sso: |-
+                    {
+                      "email": "john.doe@company.com",
+                      "sso_provider": "github",
+                      "user_id": "${warpgate_user.sso_user.id}"
+                    }
+                warpgate_user_sso_credential.google_sso: |-
+                    {
+                      "email": "john.doe@company.com",
+                      "sso_provider": "google",
+                      "user_id": "${warpgate_user.sso_user.id}"
+                    }
+            - name: sso_user
+              manifest: |-
+                {
+                  "credential_policy": [
+                    {
+                      "http": [
+                        "Sso"
+                      ],
+                      "mysql": [
+                        "Sso"
+                      ],
+                      "postgres": [
+                        "Sso"
+                      ],
+                      "ssh": [
+                        "Sso",
+                        "PublicKey"
+                      ]
+                    }
+                  ],
+                  "description": "User with SSO authentication",
+                  "username": "john.doe"
+                }
+              dependencies:
+                warpgate_user_sso_credential.github_sso: |-
+                    {
+                      "email": "john.doe@company.com",
+                      "sso_provider": "github",
+                      "user_id": "${warpgate_user.sso_user.id}"
+                    }
+                warpgate_user_sso_credential.google_sso: |-
+                    {
+                      "email": "john.doe@company.com",
+                      "sso_provider": "google",
+                      "user_id": "${warpgate_user.sso_user.id}"
+                    }
+            - name: sso_user
+              manifest: |-
+                {
+                  "credential_policy": [
+                    {
+                      "http": [
+                        "Sso"
+                      ],
+                      "ssh": [
+                        "Sso",
+                        "PublicKey"
+                      ]
+                    }
+                  ],
+                  "description": "Alice - SSO authenticated user",
+                  "username": "alice"
+                }
+              dependencies:
+                warpgate_user_sso_credential.alice_google: |-
+                    {
+                      "email": "alice@company.com",
+                      "sso_provider": "google",
+                      "user_id": "${warpgate_user.sso_user.id}"
+                    }
+        argumentDocs:
+            allowed_ip_ranges: '- (Optional) List of allowed IP ranges in CIDR notation (e.g. 10.0.0.0/8, 192.168.1.0/24, or a single IP like 1.2.3.4/32). If set, only connections from these IP ranges will be allowed for this user. Leave empty to allow all IPs.'
+            azure: '- Azure Active Directory'
+            credential_policy: '- (Optional) A block that defines the credential policies for this user. This block can be defined at most once.'
+            credential_policy.http: '- (Optional) List of credential types required for HTTP access. Valid values: Password, PublicKey, Totp, Sso, WebUserApproval.'
+            credential_policy.mysql: '- (Optional) List of credential types required for MySQL access. Valid values: Password, PublicKey, Totp, Sso, WebUserApproval.'
+            credential_policy.postgres: '- (Optional) List of credential types required for PostgreSQL access. Valid values: Password, PublicKey, Totp, Sso, WebUserApproval.'
+            credential_policy.ssh: '- (Optional) List of credential types required for SSH access. Valid values: Password, PublicKey, Totp, Sso, WebUserApproval.'
+            description: '- (Optional) A human-readable description of the user.'
+            github: '- GitHub OAuth'
+            google: '- Google Workspace/OAuth'
+            http: (List of String)
+            id: '- The ID of the user.'
+            mysql: (List of String)
+            okta: '- Okta SAML/OIDC'
+            postgres: (List of String)
+            ssh: (List of String)
+            username: '- (Required) The username of the user. Must be unique within the Warpgate instance.'
+        importStatements: []
+    warpgate_user_role:
+        subCategory: ""
+        description: Creates an association between a user and a role in Warpgate.
+        name: warpgate_user_role
+        title: warpgate_user_role Resource - terraform-provider-warpgate
+        examples:
+            - name: eugene_developer
+              manifest: |-
+                {
+                  "role_id": "${warpgate_role.developers.id}",
+                  "user_id": "${warpgate_user.eugene.id}"
+                }
+              references:
+                role_id: warpgate_role.developers.id
+                user_id: warpgate_user.eugene.id
+              dependencies:
+                warpgate_role.developers: |-
+                    {
+                      "name": "developers"
+                    }
+                warpgate_user.eugene: |-
+                    {
+                      "username": "eugene"
+                    }
+        argumentDocs:
+            id: '- The combined ID in the format user_id:role_id.'
+            role_id: '- (Required) The ID of the role to assign.'
+            user_id: '- (Required) The ID of the user to assign the role to.'
+        importStatements: []
+    warpgate_user_sso_credential:
+        subCategory: ""
+        description: Manages an SSO credential for a user in Warpgate.
+        name: warpgate_user_sso_credential
+        title: warpgate_user_sso_credential Resource - terraform-provider-warpgate
+        examples:
+            - name: john_google
+              manifest: |-
+                {
+                  "email": "john.doe@company.com",
+                  "sso_provider": "google",
+                  "user_id": "${warpgate_user.john_doe.id}"
+                }
+              references:
+                user_id: warpgate_user.john_doe.id
+              dependencies:
+                warpgate_user.john_doe: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "http": [
+                            "Sso"
+                          ],
+                          "mysql": [
+                            "Sso"
+                          ],
+                          "postgres": [
+                            "Sso"
+                          ],
+                          "ssh": [
+                            "Sso",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "John Doe - Software Engineer",
+                      "username": "john.doe"
+                    }
+            - name: john_github
+              manifest: |-
+                {
+                  "email": "john.doe@company.com",
+                  "sso_provider": "github",
+                  "user_id": "${warpgate_user.john_doe.id}"
+                }
+              references:
+                user_id: warpgate_user.john_doe.id
+              dependencies:
+                warpgate_user.john_doe: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "http": [
+                            "Sso"
+                          ],
+                          "mysql": [
+                            "Sso"
+                          ],
+                          "postgres": [
+                            "Sso"
+                          ],
+                          "ssh": [
+                            "Sso",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "John Doe - Software Engineer",
+                      "username": "john.doe"
+                    }
+            - name: john_okta
+              manifest: |-
+                {
+                  "email": "john.doe@company.com",
+                  "sso_provider": "okta",
+                  "user_id": "${warpgate_user.john_doe.id}"
+                }
+              references:
+                user_id: warpgate_user.john_doe.id
+              dependencies:
+                warpgate_user.john_doe: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "http": [
+                            "Sso"
+                          ],
+                          "mysql": [
+                            "Sso"
+                          ],
+                          "postgres": [
+                            "Sso"
+                          ],
+                          "ssh": [
+                            "Sso",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "John Doe - Software Engineer",
+                      "username": "john.doe"
+                    }
+            - name: alice_okta
+              manifest: |-
+                {
+                  "email": "alice@company.com",
+                  "sso_provider": "okta",
+                  "user_id": "${warpgate_user.multi_sso_user.id}"
+                }
+              references:
+                user_id: warpgate_user.multi_sso_user.id
+              dependencies:
+                warpgate_user.multi_sso_user: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "http": [
+                            "Sso"
+                          ],
+                          "ssh": [
+                            "Sso",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "Alice - Multi-SSO user",
+                      "username": "alice"
+                    }
+            - name: alice_google
+              manifest: |-
+                {
+                  "email": "alice.personal@gmail.com",
+                  "sso_provider": "google",
+                  "user_id": "${warpgate_user.multi_sso_user.id}"
+                }
+              references:
+                user_id: warpgate_user.multi_sso_user.id
+              dependencies:
+                warpgate_user.multi_sso_user: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "http": [
+                            "Sso"
+                          ],
+                          "ssh": [
+                            "Sso",
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "Alice - Multi-SSO user",
+                      "username": "alice"
+                    }
+            - name: service_google
+              manifest: |-
+                {
+                  "email": "ci-cd-bot@company.com",
+                  "sso_provider": "google",
+                  "user_id": "${warpgate_user.service_account.id}"
+                }
+              references:
+                user_id: warpgate_user.service_account.id
+              dependencies:
+                warpgate_user.service_account: |-
+                    {
+                      "credential_policy": [
+                        {
+                          "http": [
+                            "Sso"
+                          ],
+                          "ssh": [
+                            "PublicKey"
+                          ]
+                        }
+                      ],
+                      "description": "CI/CD Service Account",
+                      "username": "ci-cd-bot"
+                    }
+        argumentDocs:
+            adfs: '- Active Directory Federation Services'
+            auth0: '- Auth0 identity platform'
+            azure: '- Azure Active Directory'
+            discord: '- Discord OAuth'
+            email: '- (Required) The email address associated with the SSO provider. This should match the email address in the user''s SSO provider account.'
+            github: '- GitHub OAuth'
+            gitlab: '- GitLab OAuth'
+            google: '- Google Workspace / Gmail OAuth'
+            id: '- The ID of the SSO credential.'
+            microsoft: '- Microsoft Azure AD / Office 365'
+            okta: '- Okta SAML/OIDC'
+            ping: '- PingIdentity'
+            sso_provider: '- (Required) The SSO provider name. Common values include google, github, okta, azure, or any custom SAML/OIDC provider configured in Warpgate.'
+            user_id: '- (Required, Forces new resource) The ID of the user to add the SSO credential to. Changing this forces a new resource to be created.'
         importStatements: []

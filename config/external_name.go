@@ -7,17 +7,17 @@ import (
 // ExternalNameConfigs contains all external name configurations for this
 // provider.
 var ExternalNameConfigs = map[string]config.ExternalName{
-	// Import requires using a randomly generated ID from provider: nl-2e21sda
-	"null_resource": idWithStub(),
-}
-
-func idWithStub() config.ExternalName {
-	e := config.IdentifierFromProvider
-	e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
-		en, _ := config.IDAsExternalName(tfstate)
-		return en, nil
-	}
-	return e
+	"warpgate_role":                  config.IdentifierFromProvider,
+	"warpgate_user":                  config.IdentifierFromProvider,
+	"warpgate_target":                config.IdentifierFromProvider,
+	"warpgate_target_group":          config.IdentifierFromProvider,
+	"warpgate_ticket":                config.IdentifierFromProvider,
+	"warpgate_parameters":            config.IdentifierFromProvider,
+	"warpgate_user_role":             config.IdentifierFromProvider,
+	"warpgate_target_role":           config.IdentifierFromProvider,
+	"warpgate_password_credential":   config.IdentifierFromProvider,
+	"warpgate_public_key_credential": config.IdentifierFromProvider,
+	"warpgate_user_sso_credential":   config.IdentifierFromProvider,
 }
 
 // ExternalNameConfigurations applies all external name configs listed in the

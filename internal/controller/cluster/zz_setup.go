@@ -9,16 +9,36 @@ import (
 
 	"github.com/crossplane/upjet/v2/pkg/controller"
 
-	resource "github.com/crossplane/upjet-provider-template/internal/controller/cluster/null/resource"
-	providerconfig "github.com/crossplane/upjet-provider-template/internal/controller/cluster/providerconfig"
+	parameters "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/parameters/parameters"
+	providerconfig "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/providerconfig"
+	role "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/role/role"
+	group "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/target/group"
+	target "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/target/target"
+	targetrole "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/target/targetrole"
+	ticket "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/ticket/ticket"
+	keycredential "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/user/keycredential"
+	passwordcredential "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/user/passwordcredential"
+	ssocredential "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/user/ssocredential"
+	user "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/user/user"
+	userrole "github.com/fulsiram/provider-upjet-warpgate/internal/controller/cluster/user/userrole"
 )
 
 // Setup creates all controllers with the supplied logger and adds them to
 // the supplied manager.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
-		resource.Setup,
+		parameters.Setup,
 		providerconfig.Setup,
+		role.Setup,
+		group.Setup,
+		target.Setup,
+		targetrole.Setup,
+		ticket.Setup,
+		keycredential.Setup,
+		passwordcredential.Setup,
+		ssocredential.Setup,
+		user.Setup,
+		userrole.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err
@@ -31,8 +51,18 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 // the supplied manager gated.
 func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
-		resource.SetupGated,
+		parameters.SetupGated,
 		providerconfig.SetupGated,
+		role.SetupGated,
+		group.SetupGated,
+		target.SetupGated,
+		targetrole.SetupGated,
+		ticket.SetupGated,
+		keycredential.SetupGated,
+		passwordcredential.SetupGated,
+		ssocredential.SetupGated,
+		user.SetupGated,
+		userrole.SetupGated,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err

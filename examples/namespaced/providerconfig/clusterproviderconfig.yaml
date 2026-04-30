@@ -1,4 +1,4 @@
-apiVersion: template.m.crossplane.io/v1beta1
+apiVersion: warpgate.m.salami.network/v1beta1
 kind: ClusterProviderConfig
 metadata:
   name: default

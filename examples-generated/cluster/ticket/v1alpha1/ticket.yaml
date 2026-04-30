@@ -1,0 +1,33 @@
+apiVersion: ticket.warpgate.salami.network/v1alpha1
+kind: Ticket
+metadata:
+  annotations:
+    meta.upbound.io/example-id: ticket/v1alpha1/ticket
+  labels:
+    testing.upbound.io/example-name: ticket
+  name: ticket
+spec:
+  forProvider:
+    targetName: web-server
+    username: admin
+
+---
+
+apiVersion: target.warpgate.salami.network/v1alpha1
+kind: Target
+metadata:
+  annotations:
+    meta.upbound.io/example-id: ticket/v1alpha1/ticket
+  labels:
+    testing.upbound.io/example-name: web_server
+  name: web-server
+spec:
+  forProvider:
+    description: Web server target
+    httpOptions:
+    - externalHost: web.example.com
+      tls:
+      - mode: Required
+        verify: true
+      url: https://web.example.com
+    name: web-server

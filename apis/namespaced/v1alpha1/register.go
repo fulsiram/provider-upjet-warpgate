@@ -7,7 +7,7 @@ import (
 
 // Package type metadata.
 const (
-	Group   = "template.m.crossplane.io"
+	Group   = "warpgate.m.salami.network"
 	Version = "v1alpha1"
 )
 

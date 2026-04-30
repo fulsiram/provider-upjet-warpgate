@@ -6,13 +6,21 @@ import (
 
 	ujconfig "github.com/crossplane/upjet/v2/pkg/config"
 
-	nullCluster "github.com/crossplane/upjet-provider-template/config/cluster/null"
-	nullNamespaced "github.com/crossplane/upjet-provider-template/config/namespaced/null"
+	parametersCluster "github.com/fulsiram/provider-upjet-warpgate/config/cluster/parameters"
+	roleCluster "github.com/fulsiram/provider-upjet-warpgate/config/cluster/role"
+	targetCluster "github.com/fulsiram/provider-upjet-warpgate/config/cluster/target"
+	ticketCluster "github.com/fulsiram/provider-upjet-warpgate/config/cluster/ticket"
+	userCluster "github.com/fulsiram/provider-upjet-warpgate/config/cluster/user"
+	parametersNamespaced "github.com/fulsiram/provider-upjet-warpgate/config/namespaced/parameters"
+	roleNamespaced "github.com/fulsiram/provider-upjet-warpgate/config/namespaced/role"
+	targetNamespaced "github.com/fulsiram/provider-upjet-warpgate/config/namespaced/target"
+	ticketNamespaced "github.com/fulsiram/provider-upjet-warpgate/config/namespaced/ticket"
+	userNamespaced "github.com/fulsiram/provider-upjet-warpgate/config/namespaced/user"
 )
 
 const (
-	resourcePrefix = "template"
-	modulePath     = "github.com/crossplane/upjet-provider-template"
+	resourcePrefix = "warpgate"
+	modulePath     = "github.com/fulsiram/provider-upjet-warpgate"
 )
 
 //go:embed schema.json
@@ -24,7 +32,7 @@ var providerMetadata string
 // GetProvider returns provider configuration
 func GetProvider() *ujconfig.Provider {
 	pc := ujconfig.NewProvider([]byte(providerSchema), resourcePrefix, modulePath, []byte(providerMetadata),
-		ujconfig.WithRootGroup("template.crossplane.io"),
+		ujconfig.WithRootGroup("warpgate.salami.network"),
 		ujconfig.WithIncludeList(ExternalNameConfigured()),
 		ujconfig.WithFeaturesPackage("internal/features"),
 		ujconfig.WithDefaultResourceOptions(
@@ -32,8 +40,11 @@ func GetProvider() *ujconfig.Provider {
 		))
 
 	for _, configure := range []func(provider *ujconfig.Provider){
-		// add custom config functions
-		nullCluster.Configure,
+		roleCluster.Configure,
+		userCluster.Configure,
+		targetCluster.Configure,
+		ticketCluster.Configure,
+		parametersCluster.Configure,
 	} {
 		configure(pc)
 	}
@@ -45,7 +56,7 @@ func GetProvider() *ujconfig.Provider {
 // GetProviderNamespaced returns the namespaced provider configuration
 func GetProviderNamespaced() *ujconfig.Provider {
 	pc := ujconfig.NewProvider([]byte(providerSchema), resourcePrefix, modulePath, []byte(providerMetadata),
-		ujconfig.WithRootGroup("template.m.crossplane.io"),
+		ujconfig.WithRootGroup("warpgate.m.salami.network"),
 		ujconfig.WithIncludeList(ExternalNameConfigured()),
 		ujconfig.WithFeaturesPackage("internal/features"),
 		ujconfig.WithDefaultResourceOptions(
@@ -56,8 +67,11 @@ func GetProviderNamespaced() *ujconfig.Provider {
 		}))
 
 	for _, configure := range []func(provider *ujconfig.Provider){
-		// add custom config functions
-		nullNamespaced.Configure,
+		roleNamespaced.Configure,
+		userNamespaced.Configure,
+		targetNamespaced.Configure,
+		ticketNamespaced.Configure,
+		parametersNamespaced.Configure,
 	} {
 		configure(pc)
 	}

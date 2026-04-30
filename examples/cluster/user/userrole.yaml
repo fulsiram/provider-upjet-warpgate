@@ -1,0 +1,44 @@
+apiVersion: user.warpgate.salami.network/v1alpha1
+kind: UserRole
+metadata:
+  annotations:
+    meta.upbound.io/example-id: user/v1alpha1/userrole
+  labels:
+    testing.upbound.io/example-name: eugene_developer
+  name: eugene-developer
+spec:
+  forProvider:
+    roleIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: developers
+    userIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: eugene
+
+---
+
+apiVersion: role.warpgate.salami.network/v1alpha1
+kind: Role
+metadata:
+  annotations:
+    meta.upbound.io/example-id: user/v1alpha1/userrole
+  labels:
+    testing.upbound.io/example-name: developers
+  name: developers
+spec:
+  forProvider:
+    name: developers
+
+---
+
+apiVersion: user.warpgate.salami.network/v1alpha1
+kind: User
+metadata:
+  annotations:
+    meta.upbound.io/example-id: user/v1alpha1/userrole
+  labels:
+    testing.upbound.io/example-name: eugene
+  name: eugene
+spec:
+  forProvider:
+    username: eugene

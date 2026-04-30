@@ -1,15 +1,9 @@
-# Provider Template
+# provider-upjet-warpgate
 
-`upjet-provider-template` is a [Crossplane](https://crossplane.io/) provider
-template that is built using [Upjet](https://github.com/crossplane/upjet) code
-generation tools and exposes XRM-conformant managed resources for the Template
-API.
-
-## Getting Started
-
-This template serves as a starting point for generating a new [Crossplane Provider](https://docs.crossplane.io/latest/packages/providers/) using the [`upjet`](https://github.com/crossplane/upjet) tooling. Please follow the guide linked below to generate a new Provider:
-
-https://github.com/crossplane/upjet/blob/main/docs/generating-a-provider.md
+`provider-upjet-warpgate` is a [Crossplane](https://crossplane.io/) provider
+generated with [Upjet](https://github.com/crossplane/upjet) on top of the
+[Warpgate](https://github.com/warp-tech/warpgate) Terraform provider
+([`warp-tech/warpgate`](https://registry.terraform.io/providers/warp-tech/warpgate/latest)).
 
 ## Developing
 
@@ -39,4 +33,4 @@ make build
 ## Report a Bug
 
 For filing bugs, suggesting improvements, or requesting new features, please
-open an [issue](https://github.com/crossplane/upjet-provider-template/issues).
+open an [issue](https://github.com/fulsiram/provider-upjet-warpgate/issues).

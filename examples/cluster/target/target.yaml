@@ -1,0 +1,21 @@
+apiVersion: target.warpgate.salami.network/v1alpha1
+kind: Target
+metadata:
+  annotations:
+    meta.upbound.io/example-id: target/v1alpha1/target
+  labels:
+    testing.upbound.io/example-name: web_server
+  name: web-server
+spec:
+  forProvider:
+    description: Production web server
+    name: web-server
+    sshOptions:
+    - host: 10.0.0.1
+      passwordAuth:
+      - passwordSecretRef:
+          key: example-key
+          name: example-secret
+          namespace: upbound-system
+      port: 22
+      username: admin

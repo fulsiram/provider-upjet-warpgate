@@ -1,0 +1,17 @@
+apiVersion: parameters.warpgate.salami.network/v1alpha1
+kind: Parameters
+metadata:
+  annotations:
+    meta.upbound.io/example-id: parameters/v1alpha1/parameters
+  labels:
+    testing.upbound.io/example-name: global_settings
+  name: global-settings
+spec:
+  forProvider:
+    allowOwnCredentialManagement: true
+    minimizePasswordLogin: false
+    rateLimitBytesPerSecond: 1000000
+    showSessionMenu: true
+    sshClientAuthKeyboardInteractive: false
+    sshClientAuthPassword: true
+    sshClientAuthPublickey: true

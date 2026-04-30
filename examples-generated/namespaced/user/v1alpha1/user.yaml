@@ -1,0 +1,62 @@
+apiVersion: user.warpgate.m.salami.network/v1alpha1
+kind: User
+metadata:
+  annotations:
+    meta.upbound.io/example-id: user/v1alpha1/user
+  labels:
+    testing.upbound.io/example-name: eugene
+  name: eugene
+  namespace: crossplane-system
+spec:
+  forProvider:
+    credentialPolicy:
+    - http:
+      - Password
+      - Totp
+      mysql:
+      - Password
+      postgres:
+      - Password
+      ssh:
+      - Password
+      - PublicKey
+    description: Eugene - Development Lead
+    username: eugene
+
+---
+
+apiVersion: user.warpgate.m.salami.network/v1alpha1
+kind: SsoCredential
+metadata:
+  annotations:
+    meta.upbound.io/example-id: user/v1alpha1/user
+  labels:
+    testing.upbound.io/example-name: github_sso
+  name: github-sso
+  namespace: crossplane-system
+spec:
+  forProvider:
+    email: john.doe@company.com
+    ssoProvider: github
+    userIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: sso_user
+
+---
+
+apiVersion: user.warpgate.m.salami.network/v1alpha1
+kind: SsoCredential
+metadata:
+  annotations:
+    meta.upbound.io/example-id: user/v1alpha1/user
+  labels:
+    testing.upbound.io/example-name: google_sso
+  name: google-sso
+  namespace: crossplane-system
+spec:
+  forProvider:
+    email: john.doe@company.com
+    ssoProvider: google
+    userIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: sso_user

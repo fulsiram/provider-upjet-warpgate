@@ -1,0 +1,12 @@
+apiVersion: role.warpgate.salami.network/v1alpha1
+kind: Role
+metadata:
+  annotations:
+    meta.upbound.io/example-id: role/v1alpha1/role
+  labels:
+    testing.upbound.io/example-name: developers
+  name: developers
+spec:
+  forProvider:
+    description: Role for development team members
+    name: developers
